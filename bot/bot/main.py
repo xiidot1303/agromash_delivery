@@ -4,6 +4,7 @@ import logging
 import traceback
 import html
 from django.db import close_old_connections
+from bot.bot.order import _to_the_getting_car_brand
 
 
 async def start(update: Update, context: CustomContext):
@@ -22,6 +23,10 @@ async def start(update: Update, context: CustomContext):
             ),
         )
         return SELECT_LANG
+    
+
+async def order(update: Update, context: CustomContext):
+    return await _to_the_getting_car_brand(update, context)
 
 
 

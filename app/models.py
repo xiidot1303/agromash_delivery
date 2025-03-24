@@ -1,5 +1,6 @@
 from django.db import models
 from bot.models import Bot_user
+from asgiref.sync import sync_to_async
 
 
 class Product(models.Model):
@@ -14,8 +15,11 @@ class Product(models.Model):
     ]
     type = models.IntegerField(choices=TYPE_CHOICES)
     price = models.DecimalField(max_digits=12, decimal_places=0)
+    photo = models.FileField(upload_to="product/photo/", null=True, blank=True)
     remaining = models.IntegerField()
 
+    def __str__(self):
+        return self.title
 
 class Order(models.Model):
     customer_name = models.CharField(max_length=255)
@@ -38,7 +42,6 @@ class OrderItem(models.Model):
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=12, decimal_places=0)
 
-
 class Cart(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -50,3 +53,8 @@ class CartItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=12, decimal_places=0)
+
+    @property
+    @sync_to_async
+    def get_product(self):
+        return self.product

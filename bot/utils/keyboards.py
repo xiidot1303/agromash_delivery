@@ -37,10 +37,13 @@ async def settings_keyboard(context: CustomContext):
 
     return buttons
 
-async def build_keyboard(context: CustomContext, button_list, n_cols, back_button=True, main_menu_button=True):
+async def build_keyboard(context: CustomContext, button_list, n_cols, back_button=True, main_menu_button=True, cart_button=False):
     # split list by two cols
     button_list_split = [button_list[i:i + n_cols] for i in range(0, len(button_list), n_cols)]
-    # add buttons back and main menu
+    # add buttons back, main menu and cart
+    if cart_button:
+        button_list_split.insert(0, [context.words.cart])
+        
     footer_buttons = []
     if back_button:
         footer_buttons.append(

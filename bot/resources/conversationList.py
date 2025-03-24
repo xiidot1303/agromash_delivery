@@ -1,4 +1,4 @@
-n = 9
+n = 13
 (
     SELECT_LANG,
     GET_NAME,
@@ -9,4 +9,8 @@ n = 9
     NAME_SETTINGS,
     PHONE_SETTINGS,
     GET_REGION,
+    GET_CAR_BRAND,
+    GET_PRODUCT_TYPE,
+    GET_PRODUCT_SIZE,
+    SHOW_PRODUCTS,
 ) = range(0, n)

@@ -68,6 +68,10 @@ class Strings:
         """Ваше имя успешно изменено!""",
     ]
     select_region = ["""Hududingizni tanlang""", """Выберите ваш регион"""]
+    select_car_brand = ["Mashina brendini tanlang", "Выберите марку машины"]
+    select_product_type = ["Mahsulot turini tanlang", "Выберите тип продукта"]
+    select_product_size = ["Mahsulot o'lchamini tanlang", "Выберите размер продукта"]
+    select_product = ["Mahsulotni tanlang", "Выберите продукт"]
 
     regions = [
         [
@@ -81,26 +85,81 @@ class Strings:
         ]
     ]
 
+    cart = [
+        "🛒 Savatcha",
+        "🛒 Корзина"
+    ]
+
+    added_to_cart = [
+        "Savatga qo'shildi. Siz savatga boshqa mahsulotlarni qo'shishingiz yoki buyurtmani rasmiylashtirishingiz mumkin.",
+        "Добавлен в корзину. Вы можете добавить другие продукты в корзину или оформить заказ."
+    ]
+
+    price = [
+        "Narxi",
+        "Цена"
+    ]
+
+    confirm_order = [
+        "Buyurtma berish",
+        "Оформить заказ"
+    ]
+
+    your_order_accepted = [
+        "Sizning buyurtmangiz qabul qilindi! Tez orada siz bilan bog'lanamiz.",
+        "Ваш заказ принят! Мы свяжемся с вами в ближайшее время."
+    ]
+    
+    add_to_cart = [
+        "➕ Savatga qo'shish",
+        "➕ Добавить в корзину"
+    ]
+    
     _ = [
         "",
         ""
     ]
-
+    
     _ = [
         "",
         ""
     ]
-
+    
     _ = [
         "",
         ""
     ]
-
+    
     _ = [
         "",
         ""
     ]
-
+    
+    _ = [
+        "",
+        ""
+    ]
+    
+    _ = [
+        "",
+        ""
+    ]
+    
+    _ = [
+        "",
+        ""
+    ]
+    
+    _ = [
+        "",
+        ""
+    ]
+    
+    _ = [
+        "",
+        ""
+    ]
+    
     _ = [
         "",
         ""
