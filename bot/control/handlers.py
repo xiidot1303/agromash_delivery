@@ -38,7 +38,7 @@ login_handler = ConversationHandler(
 )
 
 catalog_handler = ConversationHandler(
-    entry_points=[CommandHandler("order", main.order)],
+    entry_points=[MessageHandler(filters.Text(Strings.order), main.order)],
     states={
         GET_CAR_BRAND: [
             MessageHandler(filters.TEXT & exceptions_for_filter_text &
