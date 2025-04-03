@@ -4,7 +4,7 @@ import logging
 import traceback
 import html
 from django.db import close_old_connections
-from bot.bot.order import _to_the_getting_car_brand
+from bot.bot.catalog import _to_the_getting_car_brand
 
 
 async def start(update: Update, context: CustomContext):

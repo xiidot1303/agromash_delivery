@@ -12,7 +12,7 @@ from telegram.ext import (
 from bot.resources.conversationList import *
 
 from bot.bot import (
-    main, login, order
+    catalog, main, login, order
 )
 
 exceptions_for_filter_text = (~filters.COMMAND) & (
@@ -37,46 +37,78 @@ login_handler = ConversationHandler(
 
 )
 
-order_handler = ConversationHandler(
+catalog_handler = ConversationHandler(
     entry_points=[CommandHandler("order", main.order)],
     states={
         GET_CAR_BRAND: [
             MessageHandler(filters.TEXT & exceptions_for_filter_text &
-                           ~filters.Text(Strings.cart) & ~filters.Text(Strings.back), order.get_car_brand),
+                           ~filters.Text(Strings.cart) & ~filters.Text(Strings.back), catalog.get_car_brand),
         ],
         GET_PRODUCT_TYPE: [
             MessageHandler(filters.TEXT & exceptions_for_filter_text & ~filters.Text(
-                Strings.cart) & ~filters.Text(Strings.back), order.get_product_type),
+                Strings.cart) & ~filters.Text(Strings.back), catalog.get_product_type),
             MessageHandler(filters.Text(Strings.back),
-                           order._to_the_getting_car_brand)
+                           catalog._to_the_getting_car_brand)
         ],
         GET_PRODUCT_SIZE: [
             MessageHandler(filters.TEXT & exceptions_for_filter_text & ~filters.Text(
-                Strings.cart) & ~filters.Text(Strings.back), order.get_product_size),
+                Strings.cart) & ~filters.Text(Strings.back), catalog.get_product_size),
             MessageHandler(filters.Text(Strings.back),
-                           order._to_the_getting_product_type)
+                           catalog._to_the_getting_product_type)
         ],
         SHOW_PRODUCTS: [
             MessageHandler(filters.TEXT & exceptions_for_filter_text & ~filters.Text(
-                Strings.cart) & ~filters.Text(Strings.back), order.show_product_info),
+                Strings.cart) & ~filters.Text(Strings.back), catalog.show_product_info),
             MessageHandler(filters.Text(Strings.back),
-                           order._to_the_getting_product_size),
-            CallbackQueryHandler(order.save_to_cart, pattern='save_to_cart'),
-            CallbackQueryHandler(order.place_order, pattern='place_order')
+                           catalog._to_the_getting_product_size),
+            CallbackQueryHandler(catalog.save_to_cart, pattern='save_to_cart'),
+        ],
+    },
+    fallbacks=[
+        CommandHandler('start', catalog.start),
+        MessageHandler(filters.Text(Strings.main_menu), catalog.start),
+        MessageHandler(filters.Text(Strings.cart), catalog.show_cart)
+    ],
+    name="catalog",
+    persistent=True,
+
+)
+
+
+order_handler = ConversationHandler(
+    entry_points=[
+        CallbackQueryHandler(order.confirm_order, pattern="confirm_order")
+    ],
+    states={
+        GET_LOCATION: [
+            MessageHandler(filters.LOCATION, order.get_location)
+        ],
+        GET_DELIVERY_TIME: [
+            MessageHandler(filters.Text(Strings.back), order._to_the_getting_location),
+            MessageHandler(filters.TEXT & exceptions_for_filter_text, order.get_delivery_time),
+        ],
+        GET_PAYMENT_TYPE: [
+            MessageHandler(filters.Text(Strings.back), order._to_the_getting_delivery_time),
+            MessageHandler(filters.TEXT & exceptions_for_filter_text, order.get_payment_type),
+
+        ],
+        GET_COMMENT: [
+            MessageHandler(filters.Text(Strings.back), order._to_the_getting_payment_type),
+            MessageHandler(filters.TEXT & exceptions_for_filter_text, order.get_comment),
+
         ],
     },
     fallbacks=[
         CommandHandler('start', order.start),
         MessageHandler(filters.Text(Strings.main_menu), order.start),
-        MessageHandler(filters.Text(Strings.cart), order.show_cart)
     ],
     name="order",
-    persistent=True,
-
+    persistent=True
 )
 
 handlers = [
     login_handler,
+    catalog_handler,
     order_handler,
     TypeHandler(type=NewsletterUpdate, callback=main.newsletter_update)
 ]

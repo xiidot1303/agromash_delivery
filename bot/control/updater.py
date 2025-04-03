@@ -19,7 +19,7 @@ from bot import *
 persistence = PicklePersistence(filepath="persistencebot")
 context_types = ContextTypes(context=CustomContext)
 application = Application.builder().token(
-    BOT_API_TOKEN).persistence(persistence).context_types(context_types).build()
+    BOT_API_TOKEN).context_types(context_types).persistence(persistence).build()
 
 # add handlers
 for handler in handlers[::-1]:

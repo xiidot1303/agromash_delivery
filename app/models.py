@@ -34,7 +34,9 @@ class Order(models.Model):
         ('cancelled', 'Cancelled')
     ])
     bot_user = models.ForeignKey(Bot_user, on_delete=models.CASCADE, related_name='orders')
-
+    delivery_time = models.CharField(max_length=255, null=True, blank=True)
+    location = models.CharField(max_length=255, null=True, blank=True)
+    payment_type = models.CharField(max_length=50, null=True, blank=True)
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)

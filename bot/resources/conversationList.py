@@ -1,4 +1,4 @@
-n = 13
+n = 17
 (
     SELECT_LANG,
     GET_NAME,
@@ -13,4 +13,8 @@ n = 13
     GET_PRODUCT_TYPE,
     GET_PRODUCT_SIZE,
     SHOW_PRODUCTS,
+    GET_LOCATION,
+    GET_DELIVERY_TIME,
+    GET_PAYMENT_TYPE,
+    GET_COMMENT,
 ) = range(0, n)

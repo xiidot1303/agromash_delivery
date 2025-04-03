@@ -115,9 +115,22 @@ class Strings:
         "➕ Добавить в корзину"
     ]
     
-    _ = [
-        "",
-        ""
+    get_location = ["🗺 Manzilingizni yuboring", "🗺 Отправьте ваш адрес"]
+
+    send_location = [
+        "📍 Lokatsiya yuborish",
+        "📍 Отправить местоположение"
+        ]
+
+    get_delivery_time = ["Yetkazib berish vaqtini kiriting", "Введите время доставки"]
+
+    get_payment_type = ["To'lov turini tanlang", "Выберите тип оплаты"]
+
+    get_comment = ["Izoh qoldiring", "Оставьте комментарий"]
+
+    payment_types = [
+        ["Naqd", "Kartadan karta", "Bank o'tkazmasi"], 
+        ["Наличные", "С карты на карту", "Банковский перевод"]
     ]
     
     _ = [
