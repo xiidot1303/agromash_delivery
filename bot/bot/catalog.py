@@ -1,11 +1,11 @@
 from bot.bot import *
-from app.models import Product, Cart, CartItem, Order, OrderItem
+from app.models import Product, Cart, CartItem, Order, OrderItem, StoreProduct
 from asgiref.sync import sync_to_async
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 
 async def _to_the_getting_car_brand(update: Update, context: CustomContext):
-    car_brands = await sync_to_async(list)(Product.objects.values_list('car_brand', flat=True).distinct())
+    car_brands = await sync_to_async(list)(Product.objects.exclude(car_brand=None).values_list('car_brand', flat=True).distinct())
     reply_markup = await build_keyboard(context, car_brands, 2, cart_button=True, back_button=False)
     await update_message_reply_text(update, context.words.select_car_brand, reply_markup=reply_markup)
     return GET_CAR_BRAND
@@ -19,16 +19,30 @@ async def _to_the_getting_product_type(update: Update, context: CustomContext):
 
 
 async def _to_the_getting_product_size(update: Update, context: CustomContext):
-    sizes = await sync_to_async(list)(Product.objects.filter(car_brand=context.user_data['car_brand'], type=context.user_data['product_type']).values_list('size', flat=True).distinct())
+    sizes = await sync_to_async(list)(
+        StoreProduct.objects.filter(
+            product__car_brand=context.user_data['car_brand'],
+            product__type=context.user_data['product_type'],
+            quantity__gt=0
+        ).values_list('product__size', flat=True).distinct()
+    )
     reply_markup = await build_keyboard(context, sizes, 2, cart_button=True)
     await update.message.reply_text(context.words.select_product_size, reply_markup=reply_markup)
     return GET_PRODUCT_SIZE
 
 
 async def _to_the_getting_product_title(update: Update, context: CustomContext):
-    products = await sync_to_async(list)(Product.objects.filter(car_brand=context.user_data['car_brand'], type=context.user_data['product_type'], size=context.user_data['product_size']))
+    products = await sync_to_async(list)(
+        StoreProduct.objects.filter(
+            product__car_brand=context.user_data['car_brand'],
+            product__type=context.user_data['product_type'],
+            product__size=context.user_data['product_size'],
+            quantity__gt=0
+        ).select_related('product')
+    )
     product_titles = [
-        f"{product.title} - {product.price}" for product in products]
+        f"{store_product.product.title} - {store_product.product.price}" for store_product in products
+    ]
     reply_markup = await build_keyboard(context, product_titles, 2, cart_button=True)
     await update.message.reply_text(context.words.select_product, reply_markup=reply_markup)
     return SHOW_PRODUCTS

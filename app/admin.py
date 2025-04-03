@@ -1,9 +1,10 @@
 from django.contrib import admin
-from .models import Product, Order, OrderItem, Cart, CartItem
+from .models import Product, Order, OrderItem, Cart, CartItem, Store, StoreProduct
 
+@admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('title', 'size', 'car_brand', 'type', 'price', 'remaining')
-    search_fields = ('title', 'car_brand')
+    list_display = ('title', 'bitrix_id', 'price', 'size', 'car_brand', 'type')
+    search_fields = ('title', 'bitrix_id', 'car_brand')
     list_filter = ('type',)
 
 class OrderItemInline(admin.TabularInline):
@@ -25,7 +26,17 @@ class CartAdmin(admin.ModelAdmin):
     search_fields = ('bot_user__name', 'bot_user__phone')
     inlines = [CartItemInline]
 
-admin.site.register(Product, ProductAdmin)
+@admin.register(Store)
+class StoreAdmin(admin.ModelAdmin):
+    list_display = ('title', 'bitrix_id', 'address')
+    search_fields = ('title', 'bitrix_id', 'address')
+
+@admin.register(StoreProduct)
+class StoreProductAdmin(admin.ModelAdmin):
+    list_display = ('store', 'product', 'quantity')
+    search_fields = ('store__title', 'product__title')
+    list_filter = ('store',)
+
 admin.site.register(Order, OrderAdmin)
 admin.site.register(OrderItem)
 admin.site.register(Cart, CartAdmin)
