@@ -38,7 +38,7 @@ async def _to_the_getting_product_title(update: Update, context: CustomContext):
             product__type=context.user_data['product_type'],
             product__size=context.user_data['product_size'],
             quantity__gt=0
-        ).select_related('product').distinct()
+        ).distinct('product').select_related('product')
     )
     product_titles = [
         f"{store_product.product.title} - {store_product.product.price}" for store_product in products
