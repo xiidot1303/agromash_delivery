@@ -99,7 +99,7 @@ async def save_to_cart(update: Update, context: CustomContext):
 async def show_cart(update: Update, context: CustomContext):
     user_id = update.effective_user.id
     bot_user: Bot_user = await get_object_by_user_id(user_id)
-    cart = await Cart.objects.aget(bot_user=bot_user)
+    cart, created = await Cart.objects.aget_or_create(bot_user=bot_user)
     if not await CartItem.objects.filter(cart=cart).aexists():
         await update.message.reply_text("Your cart is empty.")
         return
