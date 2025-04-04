@@ -76,7 +76,7 @@ async def show_product_info(update: Update, context: CustomContext):
     if product.photo:
         await update.message.reply_photo(photo=product.photo, caption=f"<b>{product.title}</b>\n{context.words.price}: {product.price}", reply_markup=reply_markup, parse_mode=ParseMode.HTML)
     else:
-        await update.message.reply_text(f"{product.title}\nPrice: {context.words.price}", reply_markup=reply_markup, parse_mode=ParseMode.HTML)
+        await update.message.reply_text(f"<b>{product.title}</b>\n{context.words.price}: {product.price}", reply_markup=reply_markup, parse_mode=ParseMode.HTML)
     return
 
 
