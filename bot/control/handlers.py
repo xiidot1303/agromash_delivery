@@ -106,9 +106,12 @@ order_handler = ConversationHandler(
     persistent=True
 )
 
+search_product_handler = InlineQueryHandler(catalog.inline_query_handler)
+
 handlers = [
     login_handler,
     catalog_handler,
     order_handler,
+    search_product_handler,
     TypeHandler(type=NewsletterUpdate, callback=main.newsletter_update)
 ]

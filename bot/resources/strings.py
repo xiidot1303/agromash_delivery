@@ -71,7 +71,10 @@ class Strings:
     select_car_brand = ["Mashina brendini tanlang", "Выберите марку машины"]
     select_product_type = ["Mahsulot turini tanlang", "Выберите тип продукта"]
     select_product_size = ["Mahsulot o'lchamini tanlang", "Выберите размер продукта"]
-    select_product = ["Mahsulotni tanlang", "Выберите продукт"]
+    select_product = [
+        "Qidiruv tugmasini bosgan holda, mahsulotni tanlang 🔖",
+        "Выберите продукт, нажав кнопку поиска 🔖"
+    ]
 
     regions = [
         [
@@ -136,6 +139,11 @@ class Strings:
     order = [
         "🛒 Buyurtma berish",
         "🛒 Заказать"
+    ]
+    
+    search_products = [
+        "🔍 Mahsulotlarni qidirish",
+        "🔍 Поиск продуктов"
     ]
     
     _ = [

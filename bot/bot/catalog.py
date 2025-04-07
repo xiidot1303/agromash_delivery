@@ -1,7 +1,7 @@
 from bot.bot import *
 from app.models import Product, Cart, CartItem, Order, OrderItem, StoreProduct
 from asgiref.sync import sync_to_async
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, InlineQueryResultArticle, InputTextMessageContent
 
 
 async def _to_the_getting_car_brand(update: Update, context: CustomContext):
@@ -32,20 +32,40 @@ async def _to_the_getting_product_size(update: Update, context: CustomContext):
 
 
 async def _to_the_getting_product_title(update: Update, context: CustomContext):
-    products = await sync_to_async(list)(
-        StoreProduct.objects.filter(
-            product__car_brand=context.user_data['car_brand'],
-            product__type=context.user_data['product_type'],
-            product__size=context.user_data['product_size'],
-            quantity__gt=0
-        ).distinct('product').select_related('product')
-    )
-    product_titles = [
-        f"{store_product.product.title} - {store_product.product.price}" for store_product in products
-    ]
-    reply_markup = await build_keyboard(context, product_titles, 2, cart_button=True)
+    keyboard = [[InlineKeyboardButton(
+        context.words.search_products, switch_inline_query_current_chat="")]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text(context.words.select_product, reply_markup=reply_markup)
     return SHOW_PRODUCTS
+
+
+async def inline_query_handler(update: Update, context: CustomContext):
+    query = update.inline_query.query
+    car_brand = context.user_data.get('car_brand')
+    product_type = context.user_data.get('product_type')
+    product_size = context.user_data.get('product_size')
+
+    products = await sync_to_async(list)(
+        StoreProduct.objects.filter(
+            product__car_brand=car_brand,
+            product__type=product_type,
+            product__size=product_size,
+            product__title__icontains=query,
+            quantity__gt=0
+        ).distinct().select_related('product')
+    )
+    results = [
+        InlineQueryResultArticle(
+            id=str(store_product.product.id),
+            title=store_product.product.title,
+            input_message_content=InputTextMessageContent(
+                f"{store_product.product.title}<>{store_product.product.pk}"
+            ),
+            description=f"{store_product.product.price}"
+        )
+        for store_product in products
+    ]
+    await update.inline_query.answer(results, cache_time=0)
 
 
 async def get_car_brand(update: Update, context: CustomContext):
@@ -67,8 +87,8 @@ async def get_product_size(update: Update, context: CustomContext):
 
 
 async def show_product_info(update: Update, context: CustomContext):
-    product_title = update.message.text.split(" - ")[0]
-    product = await sync_to_async(Product.objects.get)(title=product_title, car_brand=context.user_data['car_brand'], type=context.user_data['product_type'], size=context.user_data['product_size'])
+    product_pk = update.message.text.split("<>")[1]
+    product = await Product.objects.aget(pk=product_pk)
     context.user_data['selected_product'] = product.id
     keyboard = [[InlineKeyboardButton(
         context.words.add_to_cart, callback_data='save_to_cart')]]
