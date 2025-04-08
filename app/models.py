@@ -16,7 +16,7 @@ class Product(models.Model):
     ]
     type = models.IntegerField(choices=TYPE_CHOICES, null=True)
     price = models.DecimalField(max_digits=12, decimal_places=0, null=True)
-    photo = models.CharField(null=True, blank=True, max_length=1024)
+    photo = models.FileField(upload_to='products/', null=True, blank=True)
 
     def __str__(self):
         return self.title

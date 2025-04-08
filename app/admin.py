@@ -3,7 +3,7 @@ from .models import Product, Order, OrderItem, Cart, CartItem, Store, StoreProdu
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('title', 'bitrix_id', 'price', 'size', 'car_brand', 'type')
+    list_display = ('title', 'bitrix_id', 'price', 'size', 'car_brand', 'type', 'photo')
     search_fields = ('title', 'bitrix_id', 'car_brand')
     list_filter = ('type',)
 
