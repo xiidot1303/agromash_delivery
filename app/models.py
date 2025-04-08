@@ -39,6 +39,16 @@ class StoreProduct(models.Model):
     def __str__(self):
         return f"{self.store.title} - {self.product.title}"
 
+    @property
+    @sync_to_async
+    def get_product(self):
+        return self.product
+
+    @property
+    @sync_to_async
+    def get_store(self):
+        return self.store
+
 
 class Order(models.Model):
     customer_name = models.CharField(max_length=255)

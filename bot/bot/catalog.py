@@ -63,7 +63,7 @@ async def inline_query_handler(update: Update, context: CustomContext):
             ),
             description=f"{product.price}"
         )
-        async for product in Product.objects.filter(storeproduct__pk__in=products_ids)
+        async for product in Product.objects.filter(storeproduct__pk__in=products_ids).distinct()
     ]
     await update.inline_query.answer(results, cache_time=0)
 

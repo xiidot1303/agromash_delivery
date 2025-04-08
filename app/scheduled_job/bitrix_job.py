@@ -81,7 +81,7 @@ async def fetch_and_create_products(get_photo=False, cookie=None):
                 ))
 
         if new_products:
-            await Product.objects.abulk_create(new_products, ignore_conflicts=True)
+            await Product.objects.abulk_create(new_products)
         if updated_products:
             await Product.objects.abulk_update(
                 updated_products,
@@ -102,18 +102,54 @@ async def fetch_and_create_store_products():
     while True:
         response = await send_request(url, type='get')
         store_products = response.get("result", {}).get("storeProducts", [])
+        
+        store_product_data_list = []
+        store_product_update_list = []
+        existing_store_products = {}
+
+        store_ids = {sp["storeId"] for sp in store_products}
+        product_ids = {sp["productId"] for sp in store_products}
+
+        stores = {
+            store.bitrix_id: store
+            async for store in Store.objects.filter(bitrix_id__in=store_ids)
+        }
+        products = {
+            product.bitrix_id: product
+            async for product in Product.objects.filter(bitrix_id__in=product_ids)
+        }
+
+        existing_store_products = {
+            ((await sp.get_store).bitrix_id, (await sp.get_product).bitrix_id): sp
+            async for sp in StoreProduct.objects.filter(
+                store__bitrix_id__in=store_ids, product__bitrix_id__in=product_ids
+            )
+        }
+
         for store_product_data in store_products:
-            try:
-                store = await Store.objects.aget(bitrix_id=store_product_data["storeId"])
-                product = await Product.objects.aget(bitrix_id=store_product_data["productId"])
-            except:
+            store = stores.get(store_product_data["storeId"])
+            product = products.get(store_product_data["productId"])
+            if not store or not product:
                 continue
-            await StoreProduct.objects.aupdate_or_create(
-                store=store,
-                product=product,
-                defaults={
-                    "quantity": store_product_data["amount"],
-                }
+
+            key = (store.bitrix_id, product.bitrix_id)
+            if key in existing_store_products:
+                sp = existing_store_products[key]
+                sp.quantity = store_product_data["amount"]
+                store_product_update_list.append(sp)
+            else:
+                store_product_data_list.append(StoreProduct(
+                    store=store,
+                    product=product,
+                    quantity=store_product_data["amount"],
+                ))
+
+        if store_product_data_list:
+            await StoreProduct.objects.abulk_create(store_product_data_list)
+        if store_product_update_list:
+            await StoreProduct.objects.abulk_update(
+                store_product_update_list,
+                fields=["quantity"],
             )
 
         next_start = response.get("next")
