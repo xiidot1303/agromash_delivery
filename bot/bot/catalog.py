@@ -5,8 +5,13 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, InlineQueryResu
 
 
 async def _to_the_getting_car_brand(update: Update, context: CustomContext):
-    car_brands = await sync_to_async(list)(Product.objects.exclude(car_brand=None).values_list('car_brand', flat=True).distinct())
-    reply_markup = await build_keyboard(context, car_brands, 2, cart_button=True, back_button=False)
+    car_brands = await sync_to_async(list)(
+        StoreProduct.objects.exclude(product__car_brand=None)
+        .values_list('product__car_brand', flat=True).distinct()
+    )
+    # Flatten the list of car brands and get distinct values
+    distinct_car_brands = list(set(brand for brands in car_brands for brand in brands))
+    reply_markup = await build_keyboard(context, distinct_car_brands, 2, cart_button=True, back_button=False)
     await update_message_reply_text(update, context.words.select_car_brand, reply_markup=reply_markup)
     return GET_CAR_BRAND
 
@@ -21,7 +26,7 @@ async def _to_the_getting_product_type(update: Update, context: CustomContext):
 async def _to_the_getting_product_size(update: Update, context: CustomContext):
     sizes = await sync_to_async(list)(
         StoreProduct.objects.filter(
-            product__car_brand=context.user_data['car_brand'],
+            product__car_brand__contains=[context.user_data['car_brand']],
             product__type=context.user_data['product_type'],
             quantity__gt=0
         ).values_list('product__size', flat=True).distinct()
@@ -47,7 +52,7 @@ async def inline_query_handler(update: Update, context: CustomContext):
 
     products_ids = await sync_to_async(list)(
         StoreProduct.objects.filter(
-            product__car_brand=car_brand,
+            product__car_brand__contains=[car_brand],
             product__type=product_type,
             product__size=product_size,
             product__title__icontains=query,

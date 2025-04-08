@@ -7,7 +7,7 @@ class Product(models.Model):
     bitrix_id = models.CharField(unique=True, null=True, max_length=16)
     title = models.CharField(max_length=255)
     size = models.CharField(max_length=16, null=True)
-    car_brand = models.CharField(max_length=255, null=True)
+    car_brand = models.JSONField(null=True)
     TYPE_CHOICES = [
         (97, "Аккумулятор"),
         (99, "Балон"),

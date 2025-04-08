@@ -60,12 +60,16 @@ async def fetch_and_create_products(get_photo=False, cookie=None):
                                 f.write(await resp.read())
                             photo_path = file_name
 
+            car_brand = [
+                item["value"] for item in product_data.get("PROPERTY_137", [])
+            ] if product_data.get("PROPERTY_137") else None
+
             if product_data["ID"] in existing_products:
                 product = existing_products[product_data["ID"]]
                 product.title = product_data["NAME"]
                 product.price = product_data["PRICE"]
                 product.size = product_data.get("PROPERTY_107", {}).get("value") if product_data.get("PROPERTY_107") else None
-                product.car_brand = product_data.get("PROPERTY_137", {}).get("value") if product_data.get("PROPERTY_137") else None
+                product.car_brand = car_brand
                 product.type = int(product_data.get("PROPERTY_139", {}).get("value", 0)) if product_data.get("PROPERTY_139") else None
                 product.photo = photo_path if photo_path else product.photo
                 updated_products.append(product)
@@ -75,7 +79,7 @@ async def fetch_and_create_products(get_photo=False, cookie=None):
                     title=product_data["NAME"],
                     price=product_data["PRICE"],
                     size=product_data.get("PROPERTY_107", {}).get("value") if product_data.get("PROPERTY_107") else None,
-                    car_brand=product_data.get("PROPERTY_137", {}).get("value") if product_data.get("PROPERTY_137") else None,
+                    car_brand=car_brand,
                     type=int(product_data.get("PROPERTY_139", {}).get("value", 0)) if product_data.get("PROPERTY_139") else None,
                     photo=photo_path,
                 ))
