@@ -45,25 +45,25 @@ async def inline_query_handler(update: Update, context: CustomContext):
     product_type = context.user_data.get('product_type')
     product_size = context.user_data.get('product_size')
 
-    products = await sync_to_async(list)(
+    products_ids = await sync_to_async(list)(
         StoreProduct.objects.filter(
             product__car_brand=car_brand,
             product__type=product_type,
             product__size=product_size,
             product__title__icontains=query,
             quantity__gt=0
-        ).distinct().select_related('product')
+        ).values_list('pk', flat=True)
     )
     results = [
         InlineQueryResultArticle(
-            id=str(store_product.product.id),
-            title=store_product.product.title,
+            id=str(product.bitrix_id),
+            title=product.title,
             input_message_content=InputTextMessageContent(
-                f"{store_product.product.title}<>{store_product.product.pk}"
+                f"{product.title}<>{product.pk}"
             ),
-            description=f"{store_product.product.price}"
+            description=f"{product.price}"
         )
-        for store_product in products
+        async for product in Product.objects.filter(storeproduct__pk__in=products_ids)
     ]
     await update.inline_query.answer(results, cache_time=0)
 
