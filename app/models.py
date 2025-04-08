@@ -4,7 +4,7 @@ from asgiref.sync import sync_to_async
 
 
 class Product(models.Model):
-    bitrix_id = models.IntegerField(unique=True, null=True)
+    bitrix_id = models.CharField(unique=True, null=True, max_length=16)
     title = models.CharField(max_length=255)
     size = models.CharField(max_length=16, null=True)
     car_brand = models.CharField(max_length=255, null=True)
@@ -23,7 +23,7 @@ class Product(models.Model):
 
 
 class Store(models.Model):
-    bitrix_id = models.IntegerField(unique=True, null=True)
+    bitrix_id = models.CharField(unique=True, null=True, max_length=16)
     title = models.CharField(max_length=255)
     address = models.CharField(max_length=255)
 
