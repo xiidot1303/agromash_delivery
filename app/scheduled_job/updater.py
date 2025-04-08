@@ -13,4 +13,4 @@ class jobs:
     scheduler.add_job(
         async_to_sync(fetch_and_create_products), 'interval', minutes=20)
     scheduler.add_job(
-        async_to_sync(fetch_and_create_products), 'interval', minutes=5)
+        async_to_sync(fetch_and_create_store_products), 'interval', minutes=10)
