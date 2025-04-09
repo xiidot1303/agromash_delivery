@@ -14,3 +14,5 @@ class jobs:
         async_to_sync(fetch_and_create_products), 'interval', minutes=20)
     scheduler.add_job(
         async_to_sync(fetch_and_create_store_products), 'interval', minutes=10)
+    scheduler.add_job(
+        async_to_sync(publish_orders_to_bitrix), 'interval', minutes=5)

@@ -67,6 +67,7 @@ class Order(models.Model):
     delivery_time = models.CharField(max_length=255, null=True, blank=True)
     location = models.CharField(max_length=255, null=True, blank=True)
     payment_type = models.CharField(max_length=50, null=True, blank=True)
+    published_to_bitrix = models.BooleanField(default=False)
 
 
 class OrderItem(models.Model):
@@ -75,6 +76,11 @@ class OrderItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=12, decimal_places=0)
+
+    @property
+    @sync_to_async
+    def get_product(self):
+        return self.product
 
 
 class Cart(models.Model):

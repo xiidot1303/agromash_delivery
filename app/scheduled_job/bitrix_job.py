@@ -1,5 +1,5 @@
 from config import BITRIX_API_URL, BITRIX_URL
-from app.models import Store, Product, StoreProduct
+from app.models import *
 from app.utils import send_request
 import aiohttp
 import os
@@ -161,3 +161,41 @@ async def fetch_and_create_store_products():
             break
         start = next_start
         url = f"{BITRIX_API_URL}/catalog.storeproduct.list?start={start}"
+
+
+async def publish_orders_to_bitrix():
+    deal_url = f"{BITRIX_API_URL}/crm.deal.add"
+    product_rows_url = f"{BITRIX_API_URL}/crm.deal.productrows.set"
+
+    async for order in Order.objects.filter(published_to_bitrix=False):
+        order: Order
+        # Create deal in Bitrix
+        request_data = {
+            "fields": {
+                "TITLE": order.customer_name,
+                "CATEGORY_ID": 21,
+                "SOURCE": "UC_9IAGE5"
+            }
+        }
+        response = await send_request(deal_url, data=request_data, type='post')
+        deal_id = response.get("result")
+
+        if deal_id:
+            # Set order items as deal products
+            rows = [
+                {
+                    "PRODUCT_ID": (await item.get_product).bitrix_id,
+                    "QUANTITY": item.quantity,
+                    "PRICE": int((await item.get_product).price)
+                }
+                async for item in order.items.all()
+                if (await item.get_product).bitrix_id
+            ]
+            if rows:
+                product_rows_data = {"id": deal_id, "rows": rows}
+                product_rows_response = await send_request(
+                    product_rows_url, data=product_rows_data, type='post'
+                )
+                if product_rows_response.get("result"):
+                    order.published_to_bitrix = True
+                    await order.asave()
