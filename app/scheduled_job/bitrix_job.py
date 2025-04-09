@@ -131,8 +131,8 @@ async def fetch_and_create_store_products():
         }
 
         for store_product_data in store_products:
-            store = stores.get(store_product_data["storeId"])
-            product = products.get(store_product_data["productId"])
+            store = stores.get(str(store_product_data["storeId"]))
+            product = products.get(str(store_product_data["productId"]))
             if not store or not product:
                 continue
 
