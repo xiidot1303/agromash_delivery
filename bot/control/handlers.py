@@ -38,7 +38,7 @@ login_handler = ConversationHandler(
 )
 
 catalog_handler = ConversationHandler(
-    entry_points=[MessageHandler(filters.Text(Strings.order), main.order)],
+    entry_points=[MessageHandler(filters.Text(Strings.order+Strings.continue_shopping), main.order)],
     states={
         GET_CAR_BRAND: [
             MessageHandler(filters.TEXT & exceptions_for_filter_text &
@@ -61,7 +61,12 @@ catalog_handler = ConversationHandler(
                 Strings.cart) & ~filters.Text(Strings.back), catalog.show_product_info),
             MessageHandler(filters.Text(Strings.back),
                            catalog._to_the_getting_product_size),
+            CallbackQueryHandler(catalog._to_the_getting_product_size, pattern="back"),
+            CallbackQueryHandler(catalog._to_the_getting_car_brand, pattern="continue_shopping"),
+            CallbackQueryHandler(catalog.show_cart, pattern="view_cart"),
             CallbackQueryHandler(catalog.save_to_cart, pattern='save_to_cart'),
+            CallbackQueryHandler(lambda update, context: catalog.update_cart_quantity(update, context, "increase"), pattern="increase_"),
+            CallbackQueryHandler(lambda update, context: catalog.update_cart_quantity(update, context, "decrease"), pattern="decrease_"),
         ],
     },
     fallbacks=[
@@ -77,7 +82,7 @@ catalog_handler = ConversationHandler(
 
 order_handler = ConversationHandler(
     entry_points=[
-        CallbackQueryHandler(order.confirm_order, pattern="confirm_order")
+        MessageHandler(filters.Text(Strings.confirm_order), order.confirm_order)
     ],
     states={
         GET_LOCATION: [
@@ -113,5 +118,5 @@ handlers = [
     catalog_handler,
     order_handler,
     search_product_handler,
-    TypeHandler(type=NewsletterUpdate, callback=main.newsletter_update)
+    TypeHandler(type=NewsletterUpdate, callback=main.newsletter_update),
 ]

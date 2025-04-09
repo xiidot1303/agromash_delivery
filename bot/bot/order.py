@@ -35,9 +35,6 @@ async def _to_the_getting_comment(update: Update, context: CustomContext):
 #########################################################################################
 
 async def confirm_order(update: Update, context: CustomContext):
-    query = update.callback_query
-    await query.answer()
-    await query.edit_message_reply_markup()
     return await _to_the_getting_location(update, context)
 
 

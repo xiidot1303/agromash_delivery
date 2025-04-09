@@ -104,8 +104,8 @@ class Strings:
     ]
 
     confirm_order = [
-        "Buyurtma berish",
-        "Оформить заказ"
+        "☑️ Buyurtma berish",
+        "☑️ Оформить заказ"
     ]
 
     your_order_accepted = [
@@ -146,6 +146,21 @@ class Strings:
         "🔍 Поиск продуктов"
     ]
     
+    continue_shopping = [
+        "🔄 Xaridlarni davom ettirish",
+        "🔄 Продолжить покупки"
+    ]
+    
+    cart_empty = [
+        "Savatchangiz bo'sh",
+        "Ваша корзина пуста"
+    ]
+
+    total_price = [
+        "Umumiy narx",
+        "Общая цена"
+    ]
+
     _ = [
         "",
         ""
