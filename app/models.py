@@ -54,6 +54,7 @@ class Order(models.Model):
     customer_name = models.CharField(max_length=255)
     customer_email = models.EmailField()
     customer_address = models.TextField()
+    customer_phone = models.CharField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=50, choices=[
@@ -68,6 +69,11 @@ class Order(models.Model):
     location = models.CharField(max_length=255, null=True, blank=True)
     payment_type = models.CharField(max_length=50, null=True, blank=True)
     published_to_bitrix = models.BooleanField(default=False)
+
+    @property
+    @sync_to_async
+    def get_bot_user(self):
+        return self.bot_user
 
 
 class OrderItem(models.Model):

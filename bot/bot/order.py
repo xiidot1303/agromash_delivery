@@ -75,6 +75,7 @@ async def place_order(update: Update, context: CustomContext):
     order = await Order.objects.acreate(
         bot_user=bot_user,
         customer_name=bot_user.name,
+        customer_phone=bot_user.phone,
         customer_email="",
         customer_address=context.user_data['address'],  # Use the fetched address
         delivery_time=context.user_data['delivery_time'],

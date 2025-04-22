@@ -54,8 +54,10 @@ async def fetch_and_create_products(get_photo=False, cookie=None):
                     async with session.get(photo_url) as resp:
                         if resp.status == 200:
                             file_name = f"products/{product_data['ID']}_{os.path.basename(photo_url)}"
-                            file_path = os.path.join(settings.MEDIA_ROOT, file_name)
-                            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                            file_path = os.path.join(
+                                settings.MEDIA_ROOT, file_name)
+                            os.makedirs(os.path.dirname(
+                                file_path), exist_ok=True)
                             with open(file_path, 'wb') as f:
                                 f.write(await resp.read())
                             photo_path = file_name
@@ -68,9 +70,11 @@ async def fetch_and_create_products(get_photo=False, cookie=None):
                 product = existing_products[product_data["ID"]]
                 product.title = product_data["NAME"]
                 product.price = product_data["PRICE"]
-                product.size = product_data.get("PROPERTY_107", {}).get("value") if product_data.get("PROPERTY_107") else None
+                product.size = product_data.get("PROPERTY_107", {}).get(
+                    "value") if product_data.get("PROPERTY_107") else None
                 product.car_brand = car_brand
-                product.type = int(product_data.get("PROPERTY_139", {}).get("value", 0)) if product_data.get("PROPERTY_139") else None
+                product.type = int(product_data.get("PROPERTY_139", {}).get(
+                    "value", 0)) if product_data.get("PROPERTY_139") else None
                 product.photo = photo_path if photo_path else product.photo
                 updated_products.append(product)
             else:
@@ -78,9 +82,11 @@ async def fetch_and_create_products(get_photo=False, cookie=None):
                     bitrix_id=product_data["ID"],
                     title=product_data["NAME"],
                     price=product_data["PRICE"],
-                    size=product_data.get("PROPERTY_107", {}).get("value") if product_data.get("PROPERTY_107") else None,
+                    size=product_data.get("PROPERTY_107", {}).get(
+                        "value") if product_data.get("PROPERTY_107") else None,
                     car_brand=car_brand,
-                    type=int(product_data.get("PROPERTY_139", {}).get("value", 0)) if product_data.get("PROPERTY_139") else None,
+                    type=int(product_data.get("PROPERTY_139", {}).get(
+                        "value", 0)) if product_data.get("PROPERTY_139") else None,
                     photo=photo_path,
                 ))
 
@@ -89,7 +95,8 @@ async def fetch_and_create_products(get_photo=False, cookie=None):
         if updated_products:
             await Product.objects.abulk_update(
                 updated_products,
-                fields=["title", "price", "size", "car_brand", "type", "photo"],
+                fields=["title", "price", "size",
+                        "car_brand", "type", "photo"],
             )
 
         next_start = response.get("next")
@@ -106,7 +113,7 @@ async def fetch_and_create_store_products():
     while True:
         response = await send_request(url, type='get')
         store_products = response.get("result", {}).get("storeProducts", [])
-        
+
         store_product_data_list = []
         store_product_update_list = []
         existing_store_products = {}
@@ -181,6 +188,35 @@ async def publish_orders_to_bitrix():
         deal_id = response.get("result")
 
         if deal_id:
+            # Set contact
+            contact_url = f"{BITRIX_API_URL}/crm.contact.add"
+            bot_user: Bot_user = await order.get_bot_user
+            if not bot_user.bitrix_contact_id:
+                # create new contact
+                request_data = {
+                    "fields": {
+                        "NAME": order.customer_name,
+                        "PHONE": [{
+                            "ID": 12,
+                            "TYPE_ID": "PHONE",
+                            "VALUE": order.customer_phone,
+                            "VALUE_TYPE": "MOBILE"
+                        }]
+                    }
+                }
+                response = await send_request(contact_url, data=request_data, type='post')
+                contact_id = response.get("result")
+                bot_user.bitrix_contact_id = contact_id
+                await bot_user.asave()
+
+            request_data = {
+                "id": deal_id,
+                "fields": {
+                    "CONTACT_ID": bot_user.bitrix_contact_id
+                }
+            }
+            response = await send_request(f"{BITRIX_API_URL}/crm.deal.contact.add", data=request_data, type='post')
+
             # Set order items as deal products
             rows = [
                 {
