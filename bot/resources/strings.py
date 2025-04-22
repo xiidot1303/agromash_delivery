@@ -161,6 +161,11 @@ class Strings:
         "Общая цена"
     ]
 
+    search_sizes = [
+        "🔎 O'lchamlarni qidirish",
+        "🔎 Поиск размеров"
+    ]
+
     _ = [
         "",
         ""

@@ -2,6 +2,7 @@ from bot.bot import *
 from app.models import Product, Cart, CartItem, Order, OrderItem, StoreProduct
 from asgiref.sync import sync_to_async
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, InlineQueryResultArticle, InputTextMessageContent
+import uuid
 
 
 async def _to_the_getting_car_brand(update: Update, context: CustomContext):
@@ -13,74 +14,50 @@ async def _to_the_getting_car_brand(update: Update, context: CustomContext):
         .values_list('product__car_brand', flat=True).distinct()
     )
     # Flatten the list of car brands and get distinct values
-    distinct_car_brands = list(set(brand for brands in car_brands for brand in brands))
+    distinct_car_brands = list(
+        set(brand for brands in car_brands for brand in brands))
     reply_markup = await build_keyboard(context, distinct_car_brands, 2, cart_button=True, back_button=False)
     await update_message_reply_text(update, context.words.select_car_brand, reply_markup=reply_markup)
     return GET_CAR_BRAND
 
 
 async def _to_the_getting_product_type(update: Update, context: CustomContext):
+    if update.callback_query:
+        await bot_edit_message_reply_markup(update, context, reply_markup=None)
     product_types = list(dict(Product.TYPE_CHOICES).values())
     reply_markup = await build_keyboard(context, product_types, 2, cart_button=True)
-    await update.message.reply_text(context.words.select_product_type, reply_markup=reply_markup)
+    message = await update.effective_message.reply_text(context.words.select_product_type, reply_markup=reply_markup)
+    context.user_data['message_to_delete'] = message.message_id
     return GET_PRODUCT_TYPE
 
 
 async def _to_the_getting_product_size(update: Update, context: CustomContext):
     if update.callback_query:
         await bot_edit_message_reply_markup(update, context, reply_markup=None)
-    sizes = await sync_to_async(list)(
-        StoreProduct.objects.filter(
-            product__car_brand__contains=[context.user_data['car_brand']],
-            product__type=context.user_data['product_type'],
-            quantity__gt=0
-        ).values_list('product__size', flat=True).distinct()
-    )
-    reply_markup = await build_keyboard(context, sizes, 2, cart_button=True)
+    keyboard = [
+        [InlineKeyboardButton(
+            context.words.search_sizes, switch_inline_query_current_chat="")],
+        [InlineKeyboardButton(
+            context.words.back, callback_data="back"),]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
     message: Message = await update.effective_message.reply_text(context.words.select_product_size, reply_markup=reply_markup)
-    context.user_data['message_to_delete'] = message.message_id
+    context.user_data['inline_query'] = 'sizes'
+
     return GET_PRODUCT_SIZE
 
 
 async def _to_the_getting_product_title(update: Update, context: CustomContext):
     keyboard = [
         [InlineKeyboardButton(
-        context.words.search_products, switch_inline_query_current_chat="")],
+            context.words.search_products, switch_inline_query_current_chat="")],
         [InlineKeyboardButton(
             context.words.back, callback_data="back"),]
-        ]
+    ]
     reply_markup = InlineKeyboardMarkup(keyboard)
+    context.user_data['inline_query'] = 'products'
     await update.message.reply_text(context.words.select_product, reply_markup=reply_markup)
     return SHOW_PRODUCTS
-
-
-async def inline_query_handler(update: Update, context: CustomContext):
-    query = update.inline_query.query
-    car_brand = context.user_data.get('car_brand')
-    product_type = context.user_data.get('product_type')
-    product_size = context.user_data.get('product_size')
-
-    products_ids = await sync_to_async(list)(
-        StoreProduct.objects.filter(
-            product__car_brand__contains=[car_brand],
-            product__type=product_type,
-            product__size=product_size,
-            product__title__icontains=query,
-            quantity__gt=0
-        ).values_list('pk', flat=True)
-    )
-    results = [
-        InlineQueryResultArticle(
-            id=str(product.bitrix_id),
-            title=product.title,
-            input_message_content=InputTextMessageContent(
-                f"{product.title}<>{product.pk}"
-            ),
-            description=f"{product.price}"
-        )
-        async for product in Product.objects.filter(storeproduct__pk__in=products_ids).distinct()
-    ]
-    await update.inline_query.answer(results, cache_time=0)
 
 
 async def get_car_brand(update: Update, context: CustomContext):
@@ -92,14 +69,14 @@ async def get_product_type(update: Update, context: CustomContext):
     product_type_text = update.message.text
     product_type = next(
         key for key, value in Product.TYPE_CHOICES if value == product_type_text)
+    if message_id := context.user_data.get('message_to_delete', None):
+        await context.bot.delete_message(update.effective_chat.id, message_id)
     context.user_data['product_type'] = product_type
     return await _to_the_getting_product_size(update, context)
 
 
 async def get_product_size(update: Update, context: CustomContext):
     context.user_data['product_size'] = update.message.text
-    if message_id:=context.user_data.get('message_to_delete', None):
-        await context.bot.delete_message(update.effective_chat.id, message_id)
     return await _to_the_getting_product_title(update, context)
 
 
@@ -109,10 +86,10 @@ async def show_product_info(update: Update, context: CustomContext):
     context.user_data['selected_product'] = product.id
     keyboard = [
         [InlineKeyboardButton(
-        context.words.add_to_cart, callback_data='save_to_cart')],
+            context.words.add_to_cart, callback_data='save_to_cart')],
         [InlineKeyboardButton(
             context.words.back, callback_data="back"),],
-        ]
+    ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     if product.photo:
         await update.message.reply_photo(photo=product.photo, caption=f"<b>{product.title}</b>\n{context.words.price}: {product.price}", reply_markup=reply_markup, parse_mode=ParseMode.HTML)
@@ -136,12 +113,15 @@ async def save_to_cart(update: Update, context: CustomContext):
     # Update inline buttons to "minus", "quantity", and "plus"
     keyboard = [
         [
-            InlineKeyboardButton("-", callback_data=f"decrease_{cart_item.id}"),
-            InlineKeyboardButton(f"{cart_item.quantity}", callback_data="quantity_display"),
+            InlineKeyboardButton(
+                "-", callback_data=f"decrease_{cart_item.id}"),
+            InlineKeyboardButton(f"{cart_item.quantity}",
+                                 callback_data="quantity_display"),
             InlineKeyboardButton("+", callback_data=f"increase_{cart_item.id}")
         ],
         [
-            InlineKeyboardButton(context.words.continue_shopping, callback_data='continue_shopping'),
+            InlineKeyboardButton(
+                context.words.continue_shopping, callback_data='continue_shopping'),
         ],
         [
             InlineKeyboardButton(context.words.cart, callback_data='view_cart')
@@ -166,12 +146,15 @@ async def update_cart_quantity(update: Update, context: CustomContext, action: s
     # Update the inline buttons with the new quantity
     keyboard = [
         [
-            InlineKeyboardButton("-", callback_data=f"decrease_{cart_item.id}"),
-            InlineKeyboardButton(f"{cart_item.quantity}", callback_data="quantity_display"),
+            InlineKeyboardButton(
+                "-", callback_data=f"decrease_{cart_item.id}"),
+            InlineKeyboardButton(f"{cart_item.quantity}",
+                                 callback_data="quantity_display"),
             InlineKeyboardButton("+", callback_data=f"increase_{cart_item.id}")
         ],
         [
-            InlineKeyboardButton(context.words.continue_shopping, callback_data='continue_shopping'),
+            InlineKeyboardButton(
+                context.words.continue_shopping, callback_data='continue_shopping'),
         ],
         [
             InlineKeyboardButton(context.words.cart, callback_data='view_cart')
@@ -209,3 +192,50 @@ async def show_cart(update: Update, context: CustomContext):
 async def start(update: Update, context: CustomContext):
     await main_menu(update, context)
     return ConversationHandler.END
+
+
+async def inline_query_handler(update: Update, context: CustomContext):
+    query_type = context.user_data.get('inline_query')
+    if query_type == 'sizes':
+        sizes = await sync_to_async(list)(
+            StoreProduct.objects.filter(
+                product__car_brand__contains=[context.user_data['car_brand']],
+                product__type=context.user_data['product_type'],
+                quantity__gt=0
+            ).values_list('product__size', flat=True).distinct()
+        )
+        results = [
+            InlineQueryResultArticle(
+                id=uuid.uuid4(),
+                title=size,
+                input_message_content=InputTextMessageContent(size)
+            )
+            for size in sizes
+        ]
+    elif query_type == 'products':
+        query = update.inline_query.query
+        car_brand = context.user_data.get('car_brand')
+        product_type = context.user_data.get('product_type')
+        product_size = context.user_data.get('product_size')
+
+        products_ids = await sync_to_async(list)(
+            StoreProduct.objects.filter(
+                product__car_brand__contains=[car_brand],
+                product__type=product_type,
+                product__size=product_size,
+                product__title__icontains=query,
+                quantity__gt=0
+            ).values_list('pk', flat=True)
+        )
+        results = [
+            InlineQueryResultArticle(
+                id=str(product.bitrix_id),
+                title=product.title,
+                input_message_content=InputTextMessageContent(
+                    f"{product.title}<>{product.pk}"
+                ),
+                description=f"{product.price}"
+            )
+            async for product in Product.objects.filter(storeproduct__pk__in=products_ids).distinct()
+        ]
+    await update.inline_query.answer(results, cache_time=0)

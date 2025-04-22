@@ -53,8 +53,8 @@ catalog_handler = ConversationHandler(
         GET_PRODUCT_SIZE: [
             MessageHandler(filters.TEXT & exceptions_for_filter_text & ~filters.Text(
                 Strings.cart) & ~filters.Text(Strings.back), catalog.get_product_size),
-            MessageHandler(filters.Text(Strings.back),
-                           catalog._to_the_getting_product_type)
+            CallbackQueryHandler(catalog._to_the_getting_product_type, pattern="back"),
+
         ],
         SHOW_PRODUCTS: [
             MessageHandler(filters.TEXT & exceptions_for_filter_text & ~filters.Text(
