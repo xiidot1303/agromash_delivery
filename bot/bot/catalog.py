@@ -195,13 +195,15 @@ async def start(update: Update, context: CustomContext):
 
 
 async def inline_query_handler(update: Update, context: CustomContext):
+    query = update.inline_query.query
     query_type = context.user_data.get('inline_query')
     if query_type == 'sizes':
         sizes = await sync_to_async(list)(
             StoreProduct.objects.filter(
                 product__car_brand__contains=[context.user_data['car_brand']],
                 product__type=context.user_data['product_type'],
-                quantity__gt=0
+                quantity__gt=0,
+                product__size__icontains=query
             ).values_list('product__size', flat=True).distinct()
         )
         results = [
@@ -213,7 +215,6 @@ async def inline_query_handler(update: Update, context: CustomContext):
             for size in sizes
         ]
     elif query_type == 'products':
-        query = update.inline_query.query
         car_brand = context.user_data.get('car_brand')
         product_type = context.user_data.get('product_type')
         product_size = context.user_data.get('product_size')
