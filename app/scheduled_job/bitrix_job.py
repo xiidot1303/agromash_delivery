@@ -232,6 +232,5 @@ async def publish_orders_to_bitrix():
                 product_rows_response = await send_request(
                     product_rows_url, data=product_rows_data, type='post'
                 )
-                if product_rows_response.get("result"):
-                    order.published_to_bitrix = True
-                    await order.asave()
+        order.published_to_bitrix = True
+        await order.asave()
