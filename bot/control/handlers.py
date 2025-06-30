@@ -37,8 +37,12 @@ login_handler = ConversationHandler(
 
 )
 
+
 catalog_handler = ConversationHandler(
-    entry_points=[MessageHandler(filters.Text(Strings.order+Strings.continue_shopping), main.order)],
+    entry_points=[
+        MessageHandler(filters.Text(Strings.order+Strings.continue_shopping), main.order),
+        MessageHandler(filters.Regex(r"^fast_order"), main.fast_order)
+        ],
     states={
         GET_CAR_BRAND: [
             MessageHandler(filters.TEXT & exceptions_for_filter_text &
@@ -112,11 +116,16 @@ order_handler = ConversationHandler(
 )
 
 search_product_handler = InlineQueryHandler(catalog.inline_query_handler)
+empty_cart_handler = MessageHandler(
+    filters.Text(Strings.to_empty_cart) & exceptions_for_filter_text,
+    main.empty_cart
+)
 
 handlers = [
     login_handler,
     catalog_handler,
     order_handler,
     search_product_handler,
+    empty_cart_handler,
     TypeHandler(type=NewsletterUpdate, callback=main.newsletter_update),
 ]

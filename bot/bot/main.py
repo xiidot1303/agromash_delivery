@@ -4,7 +4,8 @@ import logging
 import traceback
 import html
 from django.db import close_old_connections
-from bot.bot.catalog import _to_the_getting_car_brand
+from bot.bot.catalog import _to_the_getting_car_brand, show_product_info
+from app.models import Cart
 
 
 async def start(update: Update, context: CustomContext):
@@ -28,6 +29,25 @@ async def start(update: Update, context: CustomContext):
 async def order(update: Update, context: CustomContext):
     return await _to_the_getting_car_brand(update, context)
 
+
+async def fast_order(update: Update, context: CustomContext):
+    await show_product_info(update, context)
+    return SHOW_PRODUCTS
+    
+
+async def empty_cart(update: Update, context: CustomContext):
+    """Clear the user's cart."""
+    user_id = update.effective_user.id
+    # Clear the cart in the database
+    await sync_to_async(Cart.objects.filter(bot_user__user_id=user_id).delete)()
+    
+    # Notify the user
+    await update.effective_message.reply_text(
+        context.words.cart_cleared,
+        reply_markup=ReplyKeyboardRemove(),
+        parse_mode=ParseMode.HTML
+    )
+    return await main_menu(update, context)
 
 
 async def newsletter_update(update: NewsletterUpdate, context: CustomContext):

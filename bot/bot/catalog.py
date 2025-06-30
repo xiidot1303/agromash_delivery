@@ -140,6 +140,18 @@ async def update_cart_quantity(update: Update, context: CustomContext, action: s
         cart_item.quantity += 1
     elif action == "decrease" and cart_item.quantity > 1:
         cart_item.quantity -= 1
+    elif cart_item.quantity <= 1:
+        keyboard = [
+            [InlineKeyboardButton(
+                context.words.add_to_cart, callback_data='save_to_cart')],
+            [InlineKeyboardButton(
+                context.words.back, callback_data="back"),],
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await bot_edit_message_reply_markup(update, context, reply_markup=reply_markup)
+        await cart_item.adelete()
+        return
+
 
     await cart_item.asave()
 
@@ -183,7 +195,11 @@ async def show_cart(update: Update, context: CustomContext):
         overall_price += item.quantity * item.price
 
     cart_text += f"\n<b>{context.words.total_price}: {overall_price}</b>"
-    keyboard = [context.words.confirm_order, context.words.continue_shopping]
+    keyboard = [
+        context.words.confirm_order,
+        context.words.to_empty_cart, 
+        context.words.continue_shopping
+    ]
     markup = await build_keyboard(context, keyboard, 1, back_button=False, main_menu_button=False)
     await update.effective_message.reply_text(cart_text, reply_markup=markup, parse_mode=ParseMode.HTML)
     return ConversationHandler.END
@@ -239,4 +255,39 @@ async def inline_query_handler(update: Update, context: CustomContext):
             )
             async for product in Product.objects.filter(storeproduct__pk__in=products_ids).distinct()
         ]
-    await update.inline_query.answer(results, cache_time=0)
+    elif query_type == 'fast_order':
+        products_ids = await sync_to_async(list)(
+            StoreProduct.objects.filter(
+                product__title__icontains=query,
+                quantity__gt=0
+            ).values_list('pk', flat=True)
+        )
+        if len(query) < 3:
+            results = [
+                InlineQueryResultArticle(
+                    id=uuid.uuid4(),
+                    title=context.words.enter_at_least_3_characters,
+                    input_message_content=InputTextMessageContent("Please enter at least 3 characters")
+                )
+            ]
+        elif not products_ids:
+            results = [
+                InlineQueryResultArticle(
+                    id=uuid.uuid4(),
+                    title=context.words.no_products_found,
+                    input_message_content=InputTextMessageContent("No products found")
+                )
+            ]
+        else:
+            results = [
+                InlineQueryResultArticle(
+                    id=str(product.bitrix_id),
+                    title=product.title,
+                    input_message_content=InputTextMessageContent(
+                        f"fast_order {product.title}<>{product.pk}"
+                    ),
+                    description=f"{product.get_type_display()} x {product.price}"
+                )
+                async for product in Product.objects.filter(storeproduct__pk__in=products_ids).distinct()
+            ]
+    await update.inline_query.answer(results, cache_time=0, auto_pagination=True)

@@ -34,4 +34,14 @@ async def main_menu(update: Update, context: CustomContext):
         reply_markup=markup
     )
 
+    context.user_data['inline_query'] = 'fast_order'
+    markup = InlineKeyboardMarkup([
+        [InlineKeyboardButton(context.words.search, switch_inline_query_current_chat='')],
+    ])
+    await bot.send_message(
+        update.message.chat_id,
+        context.words.search_products,
+        reply_markup=markup
+    )
+
     await check_username(update)

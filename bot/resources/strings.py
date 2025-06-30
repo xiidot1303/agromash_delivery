@@ -166,29 +166,29 @@ class Strings:
         "🔎 Поиск размеров"
     ]
 
-    _ = [
-        "",
-        ""
+    search = [
+        "🔎 Qidirish",
+        "🔎 Поиск"
     ]
     
-    _ = [
-        "",
-        ""
+    enter_at_least_3_characters = [
+        "📝 Kamida 3 ta belgini kiriting",
+        "📝 Введите минимум 3 символа"
     ]
     
-    _ = [
-        "",
-        ""
+    no_products_found = [
+        "✖️ Mahsulot topilmadi",
+        "✖️ Продукты не найдены"
     ]
     
-    _ = [
-        "",
-        ""
+    to_empty_cart = [
+        "🧹 Savatchani bo'shatish",
+        "🧹 Очистить корзину"
     ]
     
-    _ = [
-        "",
-        ""
+    cart_cleared = [
+        "✔️ Savatchangiz bo'shatildi.",
+        "✔️ Ваша корзина очищена."
     ]
     
     _ = [
