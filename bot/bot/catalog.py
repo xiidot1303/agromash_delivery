@@ -3,6 +3,7 @@ from app.models import Product, Cart, CartItem, Order, OrderItem, StoreProduct
 from asgiref.sync import sync_to_async
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, InlineQueryResultArticle, InputTextMessageContent
 import uuid
+import re
 
 
 async def _to_the_getting_car_brand(update: Update, context: CustomContext):
@@ -80,15 +81,18 @@ async def get_product_size(update: Update, context: CustomContext):
     return await _to_the_getting_product_title(update, context)
 
 
-async def show_product_info(update: Update, context: CustomContext):
+async def show_product_info(update: Update, context: CustomContext, fast_order: bool = False):
     product_pk = update.message.text.split("<>")[1]
     product = await Product.objects.aget(pk=product_pk)
     context.user_data['selected_product'] = product.id
     keyboard = [
         [InlineKeyboardButton(
             context.words.add_to_cart, callback_data='save_to_cart')],
-        [InlineKeyboardButton(
-            context.words.back, callback_data="back"),],
+        [
+            InlineKeyboardButton(
+            context.words.back, callback_data="back") if not fast_order else InlineKeyboardButton(
+                context.words.main_menu, callback_data='main_menu')
+        ],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     if product.photo:
@@ -206,6 +210,8 @@ async def show_cart(update: Update, context: CustomContext):
 
 
 async def start(update: Update, context: CustomContext):
+    if update.callback_query:
+        await bot_edit_message_reply_markup(update, context, reply_markup=None)
     await main_menu(update, context)
     return ConversationHandler.END
 
@@ -256,9 +262,10 @@ async def inline_query_handler(update: Update, context: CustomContext):
             async for product in Product.objects.filter(storeproduct__pk__in=products_ids).distinct()
         ]
     elif query_type == 'fast_order':
+        pattern = r"\D{1}".join(query.split())
         products_ids = await sync_to_async(list)(
             StoreProduct.objects.filter(
-                product__title__icontains=query,
+                product__title__iregex=pattern,
                 quantity__gt=0
             ).values_list('pk', flat=True)
         )

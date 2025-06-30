@@ -20,7 +20,6 @@ async def is_message_back(update: Update):
 
 
 async def main_menu(update: Update, context: CustomContext):
-    update = update.callback_query if update.callback_query else update
     bot = context.bot
 
     buttons = [
@@ -29,7 +28,7 @@ async def main_menu(update: Update, context: CustomContext):
     markup = ReplyKeyboardMarkup(buttons, resize_keyboard=True)
 
     await bot.send_message(
-        update.message.chat_id,
+        update.effective_message.chat_id,
         context.words.main_menu,
         reply_markup=markup
     )
@@ -39,9 +38,7 @@ async def main_menu(update: Update, context: CustomContext):
         [InlineKeyboardButton(context.words.search, switch_inline_query_current_chat='')],
     ])
     await bot.send_message(
-        update.message.chat_id,
+        update.effective_message.chat_id,
         context.words.search_products,
         reply_markup=markup
     )
-
-    await check_username(update)

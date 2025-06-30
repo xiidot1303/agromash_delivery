@@ -31,7 +31,12 @@ async def order(update: Update, context: CustomContext):
 
 
 async def fast_order(update: Update, context: CustomContext):
-    await show_product_info(update, context)
+    await update.effective_message.reply_text(
+        context.words.result_of_the_search,
+        reply_markup=ReplyKeyboardRemove(),
+        parse_mode=ParseMode.HTML
+    )
+    await show_product_info(update, context, fast_order=True)
     return SHOW_PRODUCTS
     
 

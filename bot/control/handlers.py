@@ -67,6 +67,7 @@ catalog_handler = ConversationHandler(
                            catalog._to_the_getting_product_size),
             CallbackQueryHandler(catalog._to_the_getting_product_size, pattern="back"),
             CallbackQueryHandler(catalog._to_the_getting_car_brand, pattern="continue_shopping"),
+            CallbackQueryHandler(catalog.start, pattern="main_menu"),
             CallbackQueryHandler(catalog.show_cart, pattern="view_cart"),
             CallbackQueryHandler(catalog.save_to_cart, pattern='save_to_cart'),
             CallbackQueryHandler(lambda update, context: catalog.update_cart_quantity(update, context, "increase"), pattern="increase_"),
