@@ -15,6 +15,6 @@ class Command(BaseCommand):
             while True:
                 time.sleep(2)
         except (KeyboardInterrupt, SystemExit):
-            app_jobs.jobs.scheduler.shutdown()
-            bot_jobs.jobs.scheduler.shutdown()
+            app_jobs.scheduler.shutdown()
+            bot_jobs.scheduler.shutdown()
             self.stdout.write(self.style.SUCCESS('Scheduler stopped!'))
